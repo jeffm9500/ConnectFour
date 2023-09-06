@@ -56,7 +56,7 @@ void Game::getMove() {
         
     
 
-    std::cout << "Entered character is "<< char(c) << " and it's ASCII value is " << int(c) << std::endl;;
+    //std::cout << "Entered character is "<< char(c) << " and it's ASCII value is " << int(c) << std::endl;;
 
     switch(c){
         case KEY_ENTER:

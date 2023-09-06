@@ -9,6 +9,7 @@ Board::Board() {
     Colours["white"]="\033[1;37m";
     Colours["white_bg"]="\033[47m";
     Colours["green"]="\033[1;32m";
+    Colours["yellow"]="\033[1;33m";
     //Colours[""]="";
 
     // set grid (game board)
@@ -18,7 +19,7 @@ Board::Board() {
         }
     }
     // default player colours
-    player1Colour = getColour("blue");
+    player1Colour = getColour("yellow");
     player2Colour = getColour("red");
     player1Icon = "1";
     player2Icon = "2";
@@ -121,7 +122,7 @@ void Board::drawBoard(Buffer buffer, int chain[4][2]){
                         }
                     }
                     if (isPartOfWinningChain){
-                        std::cout << "colouring (" << w << ", " << h << ") green" << std::endl;
+                        //std::cout << "colouring (" << w << ", " << h << ") green" << std::endl;
                         buffer << player1("green");
                         isPartOfWinningChain = false;
                     } else {
