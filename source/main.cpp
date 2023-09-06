@@ -1,0 +1,49 @@
+#include "buffer.hpp"
+#include "board.hpp"
+#include "display.hpp"
+#include "game.hpp"
+
+
+
+/*
+TODO:
+- detect 4 in a row DIAGONAL
+- add bot AI
+- remove debug text
+- polish start/end game text
+- add different symbol options (+ colours)
+
+
+
+
+
+*/
+
+
+using namespace std;
+
+int main() {
+
+    
+    Buffer buffer;
+    Game game(buffer);  
+
+    system("cls");
+    /*
+    std::cout << "Enter a key" << std::endl;
+    char c = getch();
+    std::cout << c << std::endl;
+    */
+    
+
+
+
+    game.board.drawBoard(buffer, game.playerTurn);
+
+    game.playGame();
+    
+    
+
+
+
+}
