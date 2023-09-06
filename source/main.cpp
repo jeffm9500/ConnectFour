@@ -7,12 +7,11 @@
 
 /*
 TODO:
-- detect 4 in a row DIAGONAL
+
 - add bot AI
 - remove debug text
 - polish start/end game text
 - add different symbol options (+ colours)
-
 
 
 

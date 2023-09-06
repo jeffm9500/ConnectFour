@@ -18,12 +18,10 @@ void Game::playGame() {
             case 1:
                 // user's turn:
                 getMove();
-                board.drawBoard(buffer, playerTurn);
                 break;
             case 2:
                 
                 getMove();
-                board.drawBoard(buffer, playerTurn);
                 break;
         }
 
@@ -76,35 +74,60 @@ void Game::getMove() {
                     board.updateBoard(buffer, playerTurn);
                     winChain data = checkWinner();
                     winner = data.winner;
-                    for (k=0;i<4;k++) {
-                        for (j=0;j<2;j++){
-                            chain[k][j] = data.chain[k][j];
+                    std::cout << std::endl << "Printing chain" << std::endl;
+                    for (int j=0;j<4;j++) {
+                        for (int k=0;k<2;k++){
+                            chain[j][k] = data.chain[j][k];
+                            std::cout << chain[j][k];
                         }
                     }
                     if (winner) {
+                        std::cout << std::endl << "Winner detected: Player " << winner << std::endl;
                         board.drawBoard(buffer, chain);
+                        break;
+                    } else {
+                        std::cout << std::endl << "No winner detected" << std::endl;
+                        
                     }
                     board.tops[board.columnSelect]++;
 
+                    std::cout << "Turn played by player " << playerTurn << std::endl;
+                    playerTurn = 2;
+                    board.drawBoard(buffer, playerTurn);
                     
-                    std::cout << "Turn played" << std::endl;
 
                 }
-                playerTurn = 2;
+                
             } else {
-                // check if move can be done
                 if (board.tops[board.columnSelect] < board.getHeight()){
                     // do move
                     board.setGrid(board.columnSelect, board.getHeight()-1, playerTurn);
                     board.updateBoard(buffer, playerTurn);
-                    checkWinner();
+                    winChain data = checkWinner();
+                    winner = data.winner;
+                    std::cout << std::endl << "Printing chain" << std::endl;
+                    for (int j=0;j<4;j++) {
+                        for (int k=0;k<2;k++){
+                            chain[j][k] = data.chain[j][k];
+                            std::cout << chain[j][k];
+                        }
+                    }
+                    if (winner) {
+                        std::cout << std::endl << "Winner detected: Player " << winner << std::endl;
+                        board.drawBoard(buffer, chain);
+                        break;
+                    } else {
+                        std::cout << std::endl << "No winner detected" << std::endl;
+                        
+                    }
                     board.tops[board.columnSelect]++;
 
+                    std::cout << "Turn played by player " << playerTurn << std::endl;
+                    playerTurn = 1;
                     board.drawBoard(buffer, playerTurn);
-                    std::cout << "Turn played" << std::endl;
+                    
 
                 }
-                playerTurn = 1;
             }
             break;
         case KEY_LEFT:
@@ -114,6 +137,7 @@ void Game::getMove() {
             temp = (board.columnSelect-1) % board.getWidth();
             board.columnSelect = (temp >= 0) ? temp : (temp + 7);
             std::cout << board.columnSelect << std::endl;
+            board.drawBoard(buffer, playerTurn);
             break;
         case KEY_RIGHT:
         case KEY_D:
@@ -121,6 +145,7 @@ void Game::getMove() {
             std::cout << std::endl << "Right" << std::endl;   // key right
             board.columnSelect = (board.columnSelect+1) % board.getWidth();
             std::cout << board.columnSelect << std::endl;
+            board.drawBoard(buffer, playerTurn);
             break;
         case KEY_ESC:
         std::cout << "Ending game" << std::endl;
@@ -173,16 +198,20 @@ winChain Game::checkWinner() {
                         if (streakCount[current-1] == 4) {
                             winGame(current);
                             returnData.winner = current;
-                            for (int k=0;i <4;k++) {
-                                for (int j=0;j<2;j++){
-                                    returnData.chain[k][j] = chain[current-1][k][j];
+                            for (int j=0;j<4;j++) {
+                                for (int k=0;k<2;k++){
+                                    returnData.chain[j][k] = chain[current-1][j][k];
                                 }
                             }
+                            std::cout << "Column win";
                             return returnData;
                         }
                     }
                 }
-            }
+            } else {
+                streakCount[0] = 0;
+                streakCount[1] = 0;
+            }   
         }
     }
     streakCount[0] = 0;
@@ -205,16 +234,20 @@ winChain Game::checkWinner() {
                         if (streakCount[current-1] == 4) {
                             winGame(current);
                             returnData.winner = current;
-                            for (int k=0;i <4;k++) {
-                                for (int j=0;j<2;j++){
-                                    returnData.chain[k][j] = chain[current-1][k][j];
+                            for (int j=0;j<4;j++) {
+                                for (int k=0;k<2;k++){
+                                    returnData.chain[j][k] = chain[current-1][j][k];
                                 }
                             }
+                            std::cout << "Row win";
                             return returnData;
                         }
                     }
                 }
-            }
+            } else {
+                streakCount[0] = 0;
+                streakCount[1] = 0;
+            }   
         }
     }
     streakCount[0] = 0;
@@ -223,55 +256,122 @@ winChain Game::checkWinner() {
     // check diagonal
     // go row by row starting from the bottom up
     // check slope: /
-    for (int h=0;h<std::min(board.getHeight()-3, 0);h++) {
-        for (int w=0;w<std::min(board.getWidth()-3, 0);w++) {
+    
+    for (int h=0;h<board.getHeight()-3;h++) {
+        for (int w=0;w<board.getWidth()-3;w++) {
+            
             current = board.getGrid(w, h);
             // check if its a player
             if (current != 0) {
                 // increase current player count
-                int i = ++streakCount[current-1];
-                // reset other player's streak count
+                int streak = ++streakCount[current-1];
+                // reset other player's streak count (remember streakCount is 0-index, so P1=0, P2=1)
                 streakCount[(current == 1 ? 1 : 0)] = 0;
-                chain[current-1][0][0] = w;
-                chain[current-1][0][1] = h;
+                // streak should never be 0 at this point
+                chain[current-1][streak-1][0] = w;
+                chain[current-1][streak-1][1] = h;
+
+                int offset = 1; //keep track of offset from (+1,+1) to (+3,+3)
                 
-                while (streakCount[current-1] > 0) {
-                    i = streakCount[current-1];
-                    if (i >= 4) {
+                while (streak > 0) {
+                    
+                    if (streak == 4) {
                         winGame(current);
                         returnData.winner = current;
-                        for (int k=0;i <4;k++) {
-                            for (int j=0;j<2;j++){
-                                returnData.chain[k][j] = chain[current-1][k][j];
+                        for (int j=0;j<4;j++) {
+                            for (int k=0;k<2;k++){
+                                returnData.chain[j][k] = chain[current-1][j][k];
                             }
                         }
+                        std::cout << "/ slope win";
                         return returnData;
                     } else {
-                        next = board.getGrid(w+1, h+1);
-                        if (next != 0) {
+                        next = board.getGrid(w+offset, h+offset);
+                        
+                        if (next == current) {
                             // streak continues
-                            chain[current-1][i-1][0] = w;
-                            chain[current-1][i-1][1] = h;
-                            streakCount[current-1]++;
-                            w++;
-                            h++;
+                            // increase streakCout, and then update streak
+                            streak = ++streakCount[current-1];
+                            // add coordinate to the chain
+                            chain[current-1][streak-1][0] = w+offset;
+                            chain[current-1][streak-1][1] = h+offset;
+                            // increase offset for next iteration
+                            offset++;
                         } else {
                             streakCount[current-1] = 0;
+                            // will cause while loop to end
                         }
                     }
+                    // update streak
+                    streak = streakCount[current-1];
                 }   
             } else {
                 streakCount[0] = 0;
                 streakCount[1] = 0;
             }   
-
         }
+    }
+    /* check slope: \
+    */
+    streakCount[0] = 0;
+    streakCount[1] = 0;
+    for (int h=0;h<board.getHeight()-3;h++) {
+        for (int w=3;w<board.getWidth();w++) {
+            
+            current = board.getGrid(w, h);
+            // check if its a player
+            if (current != 0) {
+                // increase current player count
+                int streak = ++streakCount[current-1];
+                // reset other player's streak count (remember streakCount is 0-index, so P1=0, P2=1)
+                streakCount[(current == 1 ? 1 : 0)] = 0;
+                // streak should never be 0 at this point
+                chain[current-1][streak-1][0] = w;
+                chain[current-1][streak-1][1] = h;
 
-        /* check slope: \
-        */
+                int offset = 1; //keep track of offset from (+1,+1) to (+3,+3)
+                
+                while (streak > 0) {
+                    
+                    if (streak == 4) {
+                        winGame(current);
+                        returnData.winner = current;
+                        for (int j=0;j<4;j++) {
+                            for (int k=0;k<2;k++){
+                                returnData.chain[j][k] = chain[current-1][j][k];
+                            }
+                        }
+                        std::cout << "/ slope win";
+                        return returnData;
+                    } else {
+                        next = board.getGrid(w-offset, h+offset);
+                        
+                        if (next == current) {
+                            // streak continues
+                            // increase streakCout, and then update streak
+                            streak = ++streakCount[current-1];
+                            // add coordinate to the chain
+                            chain[current-1][streak-1][0] = w-offset;
+                            chain[current-1][streak-1][1] = h+offset;
+                            // increase offset for next iteration
+                            offset++;
+                        } else {
+                            streakCount[current-1] = 0;
+                            // will cause while loop to end
 
+                        }
+                    }
+                    // update streak
+                    streak = streakCount[current-1];
+                }   
+            } else {
+                streakCount[0] = 0;
+                streakCount[1] = 0;
+            }   
+        }
     }
 
+    
 
     return returnData;
 }

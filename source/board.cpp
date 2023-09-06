@@ -4,7 +4,7 @@
 Board::Board() {
     // set colours
     Colours["reset"]= "\033[0m";
-    Colours["blue"]="\033[1;34m";
+    Colours["blue"]="\033[1;94m";
     Colours["red"]="\033[1;31m";
     Colours["white"]="\033[1;37m";
     Colours["white_bg"]="\033[47m";
@@ -99,7 +99,7 @@ void Board::drawBoard(Buffer buffer, int chain[4][2]){
 
     // add column selection
     buffer << getColumnSelectorString(columnSelect, getColour("green"));
-
+    bool isPartOfWinningChain = false;
 
     // draw top down, row by row
     for (int h=getHeight()-1; h>=0;h--){
@@ -114,17 +114,34 @@ void Board::drawBoard(Buffer buffer, int chain[4][2]){
                 if (getGrid(w, h) == 1) {
                     // add player1's plays
                     // check winning chain
-                    for (int i=0;i<4;i++){
-                        if (chain[i][0]==w && chain[i][1]==h){
-                            buffer << player1(getColour("green"));
-                        } else {
-                            buffer << player1();
-                        } 
-                    }
                     
+                    for (int i=0;i<4;i++){
+                        if (chain[i][0] == w && chain[i][1] == h) {
+                            isPartOfWinningChain = true;
+                        }
+                    }
+                    if (isPartOfWinningChain){
+                        std::cout << "colouring (" << w << ", " << h << ") green" << std::endl;
+                        buffer << player1("green");
+                        isPartOfWinningChain = false;
+                    } else {
+                        buffer << player1();
+                    } 
                 } else if (getGrid(w, h) == 2) {
                     // add player2's plays
-                    buffer << player2();
+                    // check winning chain
+                    
+                    for (int i=0;i<4;i++){
+                        if (chain[i][0] == w && chain[i][1] == h) {
+                            isPartOfWinningChain = true;
+                        }
+                    }
+                    if (isPartOfWinningChain){
+                        buffer << player2("green");
+                        isPartOfWinningChain = false;
+                    } else {
+                        buffer << player2();
+                    } 
                 } else {
                     // add empty space
                     buffer << "-";
@@ -211,7 +228,7 @@ std::string Board::getColumnSelectorString(int columnSelect, std::string colour)
 
 
 void Board::updateBoard(Buffer buffer, int playerTurn) {
-
+    drawBoard(buffer, playerTurn);
     // update gravity
     for (int h=getHeight()-1; h>0;h--){
 
@@ -224,7 +241,7 @@ void Board::updateBoard(Buffer buffer, int playerTurn) {
                     setGrid(w, h, 0);
                     
                     // draw new board
-                    drawBoard(buffer, playerTurn);
+                    //drawBoard(buffer, playerTurn);
                     // something changed, so call updateBoard again
                     updateBoard(buffer, playerTurn);
                     break;
@@ -233,7 +250,7 @@ void Board::updateBoard(Buffer buffer, int playerTurn) {
 
         }
     }
-    drawBoard(buffer, playerTurn);
+    
 
     
 
