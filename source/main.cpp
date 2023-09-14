@@ -1,7 +1,7 @@
 #include "buffer.hpp"
 #include "board.hpp"
-#include "display.hpp"
 #include "game.hpp"
+
 
 
 
@@ -25,10 +25,10 @@ using namespace std;
 int main() {
 
     
-    Buffer buffer;
-    Game game(buffer);  
+    //Buffer buffer;
+    Game game = Game();  
 
-    system("cls");
+    //system("cls");
     /*
     std::cout << "Enter a key" << std::endl;
     char c = getch();
@@ -38,7 +38,7 @@ int main() {
 
 
 
-    game.board.drawBoard(buffer, game.playerTurn);
+    //game.board.drawBoard(buffer, game.playerTurn);
 
     game.playGame();
     

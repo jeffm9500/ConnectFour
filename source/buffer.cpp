@@ -52,6 +52,8 @@ void Buffer::display() {
 void Buffer::clear() {
     std::vector<std::string> t(1, "");
     buf = t;
+    size = 1;
+    line = 0;
 }
 
 Buffer &operator<<(Buffer &curr, const std::string &str) {
