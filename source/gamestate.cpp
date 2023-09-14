@@ -487,7 +487,7 @@ void PlayState::update(Game *game) {
                 //std::cout << chain[j][k];
             }
         }
-        std::cout << std::endl << "Winner detected: Player " << game->winnerChain.winner << std::endl;
+        //std::cout << std::endl << "Winner detected: Player " << game->winnerChain.winner << std::endl;
         game->setState(EndState::getInstance());
     } //else, no winner detected so continue playing
 
@@ -577,7 +577,8 @@ GameState &EndState::getInstance() {
 
 // Quit
 void QuitState::enter(Game *game) {
-    std::cout << "quitting game" << std::endl;
+    
+    //std::cout << "quitting game" << std::endl;
     game->quitGame = true;
     //game->playingGame = false;
 }

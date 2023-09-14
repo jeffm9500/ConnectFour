@@ -31,9 +31,17 @@
 // - fix white for player - investigate
 // remove green as a player colour option
 // add no more valid moves (game board full) outcome
-
+// add esc key from customize to start
+// add 'resume' instead of 'play game'
+// - add 'new game' option too
+// add gif to github
+// add instructions to github
 
 // add AI
+
+
+// add resizable board
+
 
 
 // struct used to save the chain of 4 used to win the game

@@ -528,8 +528,8 @@ void Game::drawPlayScreen() {
     *getBuffer() << "\n";
 
     // add column selection
-    *getBuffer() << getColumnSelectorString(getBoard()->columnSelect, colour);
-
+    *getBuffer() << getColumnSelectorString(getBoard()->columnSelect, ((playerTurn == 1) ? (getPlayer1Colour() + getPlayer1Icon()) : (getPlayer2Colour() + getPlayer2Icon())));
+    *getBuffer() << "\n";
 
     // draw top down, row by row
     for (int h=getBoard()->getHeight()-1; h>=0;h--){
@@ -573,7 +573,7 @@ void Game::drawEndScreen() {
     *getBuffer() << getColour("reset");
 
     // add column selection
-    *getBuffer() << getColumnSelectorString(getBoard()->columnSelect, getColour("green"));
+    *getBuffer() << getColumnSelectorString(getBoard()->columnSelect, getPlayer1("green"));
     bool isPartOfWinningChain = false;
 
     // draw top down, row by row
@@ -661,12 +661,13 @@ void Game::drawEndScreen() {
     *getBuffer() << getColour("reset");
 }
 
-std::string Game::getColumnSelectorString(int columnSelect, std::string colour) {
+std::string Game::getColumnSelectorString(int columnSelect, std::string icon) {
     // input colour has to already have been passed thru getColour(), do not pass in colour text like "green"
     std::string string;
     for (int i=0;i<=columnSelect;i++){
         string += "  ";
     }
-    string += colour + "V\n" + getColour("reset");
+    string += icon + getColour("reset");
+    //return does not include newline
     return string;
 }
