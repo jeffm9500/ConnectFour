@@ -42,22 +42,31 @@ void StartState::update(Game* game) {
             std::cout << "key up" << std::endl;
             game->startScreenSelection--;
             break;
+        case KEY_LEFT:
+        case KEY_RIGHT:
+        case KEY_A:
+        case KEY_D:
         case KEY_ENTER:
             switch(game->startScreenSelection) {
                 case Start_Play:
-                    std::cout << "switching to play" << std::endl;
+                    //std::cout << "switching to play" << std::endl;
+                    //disable AI
+                    game->setAIDifficulty(0);
                     game->setState(PlayState::getInstance());
                     break;
+                case Start_AI:
+                    game->setState(AIState::getInstance());
+                    break;
                 case Start_HowToPlay:
-                    std::cout << "switching to howtoplay" << std::endl;
+                    //std::cout << "switching to howtoplay" << std::endl;
                     game->setState(HowToState::getInstance());
                     break;
                 case Start_Customize:
-                    std::cout << "switching to customize" << std::endl;
+                    //std::cout << "switching to customize" << std::endl;
                     game->setState(CustomizeState::getInstance());
                     break;
                 case Start_Quit:
-                    std::cout << "switching to quit" << std::endl;
+                    //std::cout << "switching to quit" << std::endl;
                     game->setState(QuitState::getInstance());
                     break;
             }
@@ -106,6 +115,10 @@ void HowToState::update(Game *game) {
     switch(c) {
         case KEY_ENTER:
         case KEY_ESC:
+        case KEY_LEFT:
+        case KEY_RIGHT:
+        case KEY_A:
+        case KEY_D:
             game->setState(StartState::getInstance());
             break;
         
@@ -182,6 +195,8 @@ void CustomizeState::update(Game *game) {
                     
                     break;
                 case Customize_Play:
+                    //disable AI
+                    game->setAIDifficulty(0);
                     game->setState(PlayState::getInstance());
                     break;
                 case Customize_Back:
@@ -300,6 +315,12 @@ void CustomizeState::update(Game *game) {
                         }
                     }
                     break;
+                case Customize_Play:
+                    game->setState(PlayState::getInstance());
+                    break;
+                case Customize_Back:
+                    game->setState(StartState::getInstance());
+                    break;
             }
             break;
         case KEY_RIGHT:
@@ -406,6 +427,12 @@ void CustomizeState::update(Game *game) {
                         }
                     }
                     break;
+                case Customize_Play:
+                    game->setState(PlayState::getInstance());
+                    break;
+                case Customize_Back:
+                    game->setState(StartState::getInstance());
+                    break;
             }
             break;
         case KEY_ESC:
@@ -457,6 +484,10 @@ void PlayState::draw(Game *game) {
 }
 
 void PlayState::update(Game *game) {
+
+    // check if board is full
+    game->checkFullBoard();
+
     // check for inputs, and alternate player turn after each input
 
     // in case AI gets implemented, this needs a switch since user wont input both players (eventually)
@@ -467,7 +498,14 @@ void PlayState::update(Game *game) {
             break;
         case 2:
             // P2 turn (currently human)
-            game->getMove();
+            if (game->getAIDifficulty() > 0) {
+                // ai present
+                game->doAIMove();
+            } else {
+                // no AI, poll for player 2 move
+                game->getMove();
+            }
+            
             break;
     }
     // resolve falling pieces
@@ -588,4 +626,91 @@ GameState &QuitState::getInstance() {
     return q;
 }
 
+// Pick AI difficulty
+void AIState::enter(Game *game) {
+    // set default selection to easy
+    game->aiScreenSelection = AI_Easy;
+    game->setAIDifficulty(game->aiScreenSelection);
+    game->setAIColour(game->getColour("green"));
+}
 
+void AIState::draw(Game *game) {
+    system("cls");
+    game->drawAIScreen();
+    game->getBuffer()->display();
+    game->getBuffer()->clear();
+}
+
+void AIState::update(Game *game) {
+    int c;
+    c = getch();
+    while (!c) {
+        c = getch();
+    }
+    //std::cout << "Entered character is "<< char(c) << " and it's ASCII value is " << int(c) << std::endl;
+    switch(c) {
+        case KEY_S:
+        case KEY_DOWN:
+            // ++ because enum is top->down low->high
+            std::cout << "key down" << std::endl;
+            game->aiScreenSelection++;
+            break;
+
+        case KEY_W:
+        case KEY_UP:
+            std::cout << "key up" << std::endl;
+            game->aiScreenSelection--;
+            break;
+        case KEY_LEFT:
+        case KEY_RIGHT:
+        case KEY_A:
+        case KEY_D:
+        case KEY_ENTER:
+            //switch for EndState menu options
+            switch(game->aiScreenSelection) {
+                case AI_Easy:
+                    game->setAIDifficulty(game->aiScreenSelection);
+                    game->setAIColour(game->getColour("green"));
+                    break;
+                case AI_Medium:
+                    game->setAIDifficulty(game->aiScreenSelection);
+                    game->setAIColour(game->getColour("yellow"));
+                    break;
+                case AI_Hard:
+                    game->setAIDifficulty(game->aiScreenSelection);
+                    game->setAIColour(game->getColour("red"));
+                    break;
+                case AI_Play:
+                    // check that difficulty has been set
+                    if (game->getAIDifficulty() > 0) {
+                        game->setState(PlayState::getInstance());
+                    } 
+                    // else ignore input 
+                    // this should not happen since difficulty is set to default=easy on this page
+                    break;
+                case AI_Back:
+                    game->setState(StartState::getInstance());
+                    break;
+            }
+            
+            break;
+        case KEY_ESC:
+        case CTRL_C:
+            // end game (dont actually switch to end game screen)
+            game->setState(StartState::getInstance());
+            break;
+        default:
+            //std::cout << "default, polling again" << std::endl;
+            update(game);
+            break;
+    }
+}
+
+void AIState::exit(Game *game) {
+
+}
+
+GameState &AIState::getInstance() {
+    static AIState a;
+    return a;
+}

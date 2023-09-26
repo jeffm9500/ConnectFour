@@ -2,6 +2,8 @@
 
 
 Game::Game() {
+    // seed
+    srand(time(NULL));
     // set up pointers
     buffer = &trueBuffer;
     board = &trueBoard;
@@ -19,11 +21,14 @@ Game::Game() {
     // setup colours
     Colours["reset"]= "\033[0m";
     Colours["blue"]="\033[94;1m"; //1;94
+    //Colours["blue2"]="\033[1;m";
     Colours["red"]="\033[31;1m";
     Colours["white"]="\033[37m";
     Colours["white_bg"]="\033[47m"; //maybe 37;3
     Colours["green"]="\033[32;1m";
     Colours["yellow"]="\033[33;1m";
+    Colours["magenta"]="\033[1;35m";
+    Colours["cyan"]="\033[1;36m";
 
     
     // populate available player colours (strings so they can be printed as text)
@@ -32,31 +37,46 @@ Game::Game() {
     PlayerColours.push_back("white");
     PlayerColours.push_back("green");
     PlayerColours.push_back("blue");
+    //PlayerColours.push_back("blue2");
+    PlayerColours.push_back("magenta");
+    PlayerColours.push_back("cyan");
 
     PlayerColoursFormatted.push_back("  Red     ");
     PlayerColoursFormatted.push_back("  Yellow  ");
     PlayerColoursFormatted.push_back("  White   ");
     PlayerColoursFormatted.push_back("  Green   ");
     PlayerColoursFormatted.push_back("  Blue    ");
+    //PlayerColoursFormatted.push_back("  Blue2   ");
+    PlayerColoursFormatted.push_back("  Magenta ");
+    PlayerColoursFormatted.push_back("  Cyan    ");
 
     PlayerColoursSelected.push_back("> Red <   ");
     PlayerColoursSelected.push_back("> Yellow <");
     PlayerColoursSelected.push_back("> White < ");
     PlayerColoursSelected.push_back("> Green < ");
     PlayerColoursSelected.push_back("> Blue <  ");
+    //PlayerColoursSelected.push_back("> Blue2 < ");
+    PlayerColoursSelected.push_back("> Magenta<");
+    PlayerColoursSelected.push_back("> Cyan <  ");
 
-    setBackgroundColour(getColour("red"));
+    setBackgroundColour(getColour("white"));
     setForegroundColour(getColour("yellow"));
 
     PlayerIcons.push_back("1");
     PlayerIcons.push_back("2");
     PlayerIcons.push_back("X");
     PlayerIcons.push_back("0");
-    PlayerIcons.push_back("$");
     PlayerIcons.push_back("@");
-    PlayerIcons.push_back("&");
     PlayerIcons.push_back("#");
+    PlayerIcons.push_back("$");
+    PlayerIcons.push_back("%");
+    PlayerIcons.push_back("^");
+    PlayerIcons.push_back("&");
     PlayerIcons.push_back("*");
+    PlayerIcons.push_back("-");
+    PlayerIcons.push_back("+");
+    PlayerIcons.push_back("~");
+
 
     // player customization defaults
     setPlayer1Colour(getColour(PlayerColours.at(colourOffset[0])));
@@ -131,6 +151,42 @@ void Game::setPlayer2Icon(std::string icon) {
     player2Icon = icon;
 }
 
+std::string Game::getAIColour() {return aiColour;}
+
+void Game::setAIColour(std::string col) {
+    aiColour = col;
+}
+
+void Game::setAIDifficulty(aiSelect selection) {
+    switch(selection){
+        case AI_Easy:
+            aiDifficulty = 1;
+            break;
+        case AI_Medium:
+            aiDifficulty = 2;
+            break;
+        case AI_Hard:
+            aiDifficulty = 3;
+            break;
+        case AI_Play:
+            break;
+        // cancel, go back to homescreen
+        case AI_Back:
+            aiDifficulty = 0;
+            break;
+    }
+}
+
+void Game::setAIDifficulty(int num) {
+    if (num <= 0) {
+        aiDifficulty = 0;
+    } else {
+        // set diffulty , ceiling of MAX_DIFFICULTY
+        aiDifficulty = std::min(num, MAX_DIFFICULTY);
+    }
+    
+}
+
 void Game::setPlayer1Colour(std::string newColour) {
     player1Colour = newColour;
 }
@@ -203,9 +259,66 @@ void Game::getMove() {
     return;
 }
 
+void Game::doAIMove() {
+    int aiColumnSelection;
+    switch(getAIDifficulty()) {
+        case 2:
+            //medium
+
+            break;
+        case 3:
+            // hard
+            break;
+        case 1: //easy, same as default (in case more difficulties added)
+        default:
+            do {
+                
+                // generate random column to select
+                aiColumnSelection = std::rand()%(getBoard()->getWidth());
+                std::cout << "checking column: " << aiColumnSelection << std::endl;
+                // set dropper to column
+                getBoard()->columnSelect = aiColumnSelection;
+                // check if move can be done, if not repeat
+                std::cout << getBoard()->tops[getBoard()->columnSelect] << std::endl;
+                std::cout << getBoard()->getHeight() << std::endl;
+            } while (!(getBoard()->tops[getBoard()->columnSelect] < getBoard()->getHeight()));
+            // empty column found, place piece
+            // do move
+            getBoard()->setGrid(getBoard()->columnSelect, getBoard()->getHeight()-1, playerTurn);
+            getBoard()->updateBoard(getBuffer(), playerTurn);
+            
+            // update column tops
+            getBoard()->tops[getBoard()->columnSelect]++;
+            //std::cout << "Turn played by player " << playerTurn << std::endl;
+
+            //swap player turn
+            playerTurn = (playerTurn == 1) ? 2 : 1; 
+
+            break;
+    }
 
 
+}
 
+void Game::checkFullBoard() {
+    bool full = true;
+    for (int i=0;i<getBoard()->getWidth();i++) {
+        if (getBoard()->tops[i] < getBoard()->getHeight()) {
+            // there exists a valid move, board not full
+            full = false;
+        }
+    }
+    if (full) {
+        // board full, move to end screen (need alt for full board outcome)
+        std::cout << "Full board" << std::endl;
+        setState(EndState::getInstance());
+        return;
+    } else {
+        // board not full
+        return;
+    }
+    
+}
 
 winChain Game::checkWinner() {
     // check for 4 in a row
@@ -411,14 +524,13 @@ winChain Game::checkWinner() {
     return returnData;
 }
 
-
-
 void Game::drawStartScreen() {
     *getBuffer() << getBackgroundColour();
     std::vector<std::string> displayString;
     displayString.push_back("| " + getForegroundColour()+ "CLI Connect 4" + getBackgroundColour()+ " |");
     displayString.push_back("|               |");
     displayString.push_back("|   Play Game   |");
+    displayString.push_back("|  Play vs CPU  |");
     displayString.push_back("|  How To Play  |");
     displayString.push_back("|   Customize   |");
     displayString.push_back("|     Quit      |");
@@ -429,17 +541,61 @@ void Game::drawStartScreen() {
         case Start_Play:
             displayString.at(2) = "| " + getForegroundColour()+ "> Play Game <" + getBackgroundColour()+ " |";
             break;
+        case Start_AI:
+            displayString.at(3) = "|" + getForegroundColour()+ "> Play vs CPU <" + getBackgroundColour()+ "|";
+            break;
         case Start_HowToPlay:
-            displayString.at(3) = "|" + getForegroundColour()+ "> How To Play <" + getBackgroundColour()+ "|";
+            displayString.at(4) = "|" + getForegroundColour()+ "> How To Play <" + getBackgroundColour()+ "|";
             break;
         case Start_Customize:
-            displayString.at(4) = "| " + getForegroundColour()+ "> Customize <" + getBackgroundColour()+ " |";
+            displayString.at(5) = "| " + getForegroundColour()+ "> Customize <" + getBackgroundColour()+ " |";
             break;
         case Start_Quit:
-            displayString.at(5) = "|   " + getForegroundColour()+ "> Quit <" + getBackgroundColour()+ "    |";
+            displayString.at(6) = "|   " + getForegroundColour()+ "> Quit <" + getBackgroundColour()+ "    |";
             break;
     }
     
+    for (int i=0; i<displayString.size();i++) {
+        *getBuffer() << displayString.at(i);
+        *getBuffer() << "\n";
+    }
+    *getBuffer() << getColour("reset");
+}
+
+void Game::drawAIScreen() {
+    *getBuffer() << getBackgroundColour();
+    std::vector<std::string> displayString;
+
+    displayString.push_back("| " + getAIColour()+ "Choose CPU" + getBackgroundColour()+ "  |");
+    displayString.push_back("| " + getAIColour()+ "Difficulty" + getBackgroundColour()+ "  |");
+    displayString.push_back("|             |");
+    displayString.push_back("|    "+ getColour("green")+"Easy"+ getBackgroundColour()+"     |");
+    displayString.push_back("|   "+ getColour("yellow")+"Medium"+ getBackgroundColour()+"    |");
+    displayString.push_back("|    "+ getColour("red")+"Hard"+ getBackgroundColour()+"     |");
+    displayString.push_back("|             |");
+    displayString.push_back("|    " + getAIColour()+ "Play"+ getBackgroundColour()+"     |");
+    displayString.push_back("|    " + getAIColour()+ "Back"+ getBackgroundColour()+"     |");
+    displayString.push_back("---------------");
+
+    switch(aiScreenSelection) {
+        case AI_Easy:
+            displayString.at(3) = "|  " + getAIColour()+ "> "+ getColour("green")+"Easy" + getAIColour()+ " <" + getBackgroundColour()+ "   |";
+            break;
+        case AI_Medium:
+            displayString.at(4) = "| " + getAIColour()+ "> "+ getColour("yellow")+"Medium" + getAIColour()+ " <" + getBackgroundColour()+ "  |";
+            break;
+        case AI_Hard:
+            displayString.at(5) = "|  " + getAIColour()+ "> "+ getColour("red")+"Hard" + getAIColour()+ " <" + getBackgroundColour()+ "   |";
+            break;
+        case AI_Play:
+            displayString.at(7) = "|  " + getAIColour()+ "> Play <" + getBackgroundColour()+ "   |";
+            break;
+        case AI_Back:
+            displayString.at(8) = "|  " + getAIColour()+ "> Back <" + getBackgroundColour()+ "   |";
+            break;
+    }
+
+
     for (int i=0; i<displayString.size();i++) {
         *getBuffer() << displayString.at(i);
         *getBuffer() << "\n";
@@ -574,6 +730,7 @@ void Game::drawEndScreen() {
 
     // add column selection
     *getBuffer() << getColumnSelectorString(getBoard()->columnSelect, getPlayer1("green"));
+    *getBuffer() << "\n";
     bool isPartOfWinningChain = false;
 
     // draw top down, row by row

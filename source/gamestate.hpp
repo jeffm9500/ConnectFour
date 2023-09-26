@@ -41,6 +41,21 @@ class StartState : public GameState {
         StartState& operator=(StartState& state) {return state;};
 };
 
+// Pick AI
+class AIState : public GameState {
+    public:
+        void enter(Game* game);
+        void draw(Game* game);
+        void update(Game* game);
+        void exit(Game* game);
+        static GameState& getInstance();
+
+    private:
+        AIState() {}
+        AIState(const AIState& state);
+        AIState& operator=(AIState& state) {return state;};
+};
+
 // Customize screen
 class CustomizeState : public GameState {
     public:
@@ -102,7 +117,7 @@ class QuitState : public GameState {
         QuitState(const QuitState& state);
         QuitState& operator=(QuitState& state) {return state;};
 };
-
+// How to play
 class HowToState : public GameState {
     public:
         void enter(Game* game);

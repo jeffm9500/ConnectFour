@@ -5,6 +5,7 @@
 #include <string>
 #include <conio.h>
 #include <math.h>
+#include <time.h>
 
 #include "board.hpp"
 #include "buffer.hpp"
@@ -22,6 +23,7 @@
 #define KEY_S 115 //83
 #define KEY_D 100 //68
 #define CTRL_C 3 //ctrl + c (to break out of loop)
+#define MAX_DIFFICULTY 3 // easy, med, hard
 
 // TODO:
 
@@ -32,6 +34,8 @@
 // remove green as a player colour option
 // add no more valid moves (game board full) outcome
 // add esc key from customize to start
+// shift customize screen down to make P1/P2 their own row
+// -- add "Icon" next to icon
 // add 'resume' instead of 'play game'
 // - add 'new game' option too
 // add gif to github
@@ -54,6 +58,7 @@ struct winChain {
 // used to highlight active selection in start menu
 enum startSelect {
     Start_Play,
+    Start_AI,
     Start_HowToPlay,
     Start_Customize,
     Start_Quit
@@ -72,6 +77,31 @@ inline startSelect &operator--(startSelect &s, int) {
         s = Start_Quit;
     } else {
         s = static_cast<startSelect>(s-1);
+    }
+    return s;
+}
+
+// pick AI screen
+enum aiSelect {
+    AI_Easy,
+    AI_Medium,
+    AI_Hard,
+    AI_Play,
+    AI_Back
+};
+inline aiSelect &operator++(aiSelect &s, int) { 
+    if (s == AI_Back) {
+        s = AI_Easy;
+    } else {
+        s = static_cast<aiSelect>(s+1);
+    }
+    return s;
+}
+inline aiSelect &operator--(aiSelect &s, int) {
+    if (s == AI_Easy) {
+        s = AI_Back;
+    } else {
+        s = static_cast<aiSelect>(s-1);
     }
     return s;
 }
@@ -133,12 +163,15 @@ class Game {
     public:
         Game();
         void getMove();
+        void doAIMove();
         void playGame();
         inline Buffer *getBuffer()  {return buffer;}
         inline Board *getBoard()  {return board;}
         inline void setBuffer(Buffer b) {*buffer = b;};
         int playerTurn; // 1 for player 1, 2 for player 2
+        void checkFullBoard();
 
+        // winner info
         winChain checkWinner();
         winChain winnerChain;
         winChain getWinningChain();
@@ -149,6 +182,7 @@ class Game {
         void drawPlayScreen();
         void drawEndScreen();
         void drawHowToScreen();
+        void drawAIScreen();
 
         std::string getColumnSelectorString(int, std::string);
 
@@ -162,12 +196,14 @@ class Game {
         enum startSelect startScreenSelection;
         enum customizeSelect customizeScreenSelection;
         enum endSelect endScreenSelection;
+        enum aiSelect aiScreenSelection;
 
         // board colours
         std::string getBackgroundColour() const {return backgroundColour;}
         std::string getForegroundColour() const {return foregroundColour;}
         void setBackgroundColour(std::string c)  {backgroundColour = c;}
         void setForegroundColour(std::string c)  {foregroundColour = c;}
+
         // player customization
         std::string getColour(std::string);
         std::string getPlayer1(); //player 1 coloured icon
@@ -182,6 +218,10 @@ class Game {
         std::string getPlayer2Icon();
         void setPlayer1Icon(std::string);
         void setPlayer2Icon(std::string);
+
+        std::string getAIColour();
+        void setAIColour(std::string);
+
         // array of colour options (dynamically exclude player colours)
         std::vector<std::string> PlayerColours;
         std::vector<std::string> PlayerColoursFormatted;
@@ -192,12 +232,19 @@ class Game {
         int iconOffset[2] = {0,1};
 
 
+        // ai
+        int getAIDifficulty() const {return aiDifficulty;}
+        void setAIDifficulty(aiSelect selection);
+        void setAIDifficulty(int);
+
+
     private:
         GameState *currentState;
         Buffer *buffer;
         Buffer trueBuffer = Buffer();
         Board *board;
         Board trueBoard = Board();
+        int aiDifficulty;
         
 
         // player customization
@@ -208,5 +255,7 @@ class Game {
         std::string player2Icon;
         std::string backgroundColour;
         std::string foregroundColour;
+
+        std::string aiColour;
 
 };
